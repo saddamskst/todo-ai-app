@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="max-w-lg mx-auto py-10">
+        <h1 class="text-3xl font-bold mb-6 text-center">My Todo App</h1>
+        <form id="todoForm" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="mb-4">
+                <label for="taskDescription" class="block text-sm font-medium mb-2">Task Description</label>
+                <input type="text" id="taskDescription" class="w-full p-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+                <label for="dueDateTime" class="block text-sm font-medium mb-2">Due Date and Time</label>
+                <input type="datetime-local" id="dueDateTime" class="w-full p-2 border border-gray-300 rounded-md" required>
+            </div>
+            <div class="mb-4">
+                <label for="reminderTime" class="block text-sm font-medium mb-2">Reminder Notification Time</label>
+                <input type="datetime-local" id="reminderTime" class="w-full p-2 border border-gray-300 rounded-md" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md font-bold hover:bg-blue-400">Submit🚀</button>
+        </form>
+        <div id="output" class="mt-6 p-4 bg-white rounded-lg shadow-md"></div>
+    </div>
+    <footer class="text-center mt-10">
+        <a href="https://www.youtube.com/@saddamtechs" target="_blank" class="text-blue-500">Made with ❤️ By Saddam Tech</a>
+    </footer>
+
+    <script>
+        document.getElementById('todoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const taskDescription = document.getElementById('taskDescription').value;
+            const dueDateTime = document.getElementById('dueDateTime').value;
+            const reminderTime = document.getElementById('reminderTime').value;
+            
+            const substitutedPrompt = `Generate a reminder for me to complete my task: "${taskDescription}" by ${dueDateTime}, and send me a notification at ${reminderTime}. Once I complete the task, move it to the Completed tab.`;
+            
+            const output = document.getElementById('output');
+            output.innerText = '';
+            
+            const websocket = new WebSocket('wss://backend.buildpicoapps.com/ask_ai_streaming_v2');
+            
+            websocket.addEventListener("open", () => {
+                websocket.send(
+                    JSON.stringify({
+                        appId: "yard-argue",
+                        prompt: substitutedPrompt,
+                    })
+                );
+            });
+            
+            websocket.addEventListener("message", (event) => {
+                console.log(event.data);
+                output.innerText = `${output.innerText}${event.data}`;
+            });
+
+            websocket.addEventListener("close", (event) => {
+                console.log("Connection closed", event.code, event.reason);
+                if (event.code != 1000) {
+                    alert("Oops, we ran into an error. Refresh the page and try again.");
+                }
+            });
+
+            websocket.addEventListener("error", (error) => {
+                console.log('WebSocket error', error);
+                alert("Oops, we ran into an error. Refresh the page and try again.");
+            });
+        });
+    </script>
+</body>
+</html>
